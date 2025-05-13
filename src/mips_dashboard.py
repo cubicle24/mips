@@ -35,36 +35,35 @@ def calculate_gender_distribution(the_df: pd.DataFrame) -> str:
     return (f"{males:.1f}% : {females:.1f}%")
 
 
-st.header("Merit-Based Incentive Payment System (MIPS) Dashboard")
-st.markdown("Explore trends and patterns in provider MIPS scores")
+st.markdown('<h1 style="text-align: center; margin-bottom: 0.5rem;">Merit-Based Incentive Payment System (MIPS) Dashboard</h1>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; font-size:15px; color:lightblue;">Explore trends and patterns in MIPS scores </div>', unsafe_allow_html=True)
 st.divider()
 
-#-- SIDEBAR ---
-sidebar = st.sidebar
-sidebar.title("Filter Providers by:")
+
+#-- MAIN CONTENT ---
+leftbar, col1, col2 = st.columns([1,1,3],gap="large")
+
+leftbar.subheader("Filter Providers by:")
 
 states = ['All'] + sorted(df['st'].dropna().unique().tolist())
-selected_state = sidebar.selectbox("State", options=states, index=0)
+selected_state = leftbar.selectbox("State", options=states, index=0)
 print(f"Selected state: {selected_state}")
 
 specialties = ['All'] + sorted(df['pri_spec'].dropna().unique().tolist())
-selected_specialty = sidebar.selectbox("Specialty", options=specialties, index=0)
+selected_specialty = leftbar.selectbox("Specialty", options=specialties, index=0)
 print(f"Selected specialty: {selected_specialty}")
 
 genders = ['All'] + sorted(df['gndr'].dropna().str.strip().unique().tolist())
-selected_gender = sidebar.selectbox("Gender", options=genders, index=0)
+selected_gender = leftbar.selectbox("Gender", options=genders, index=0)
 print(f"Selected gender: {selected_gender}")
 
 years_exp = ['All'] + sorted(df['years_experience'].dropna().unique().tolist())
-selected_years_exp = sidebar.selectbox("Years Experience", options=years_exp, index=0)
+selected_years_exp = leftbar.selectbox("Years Experience", options=years_exp, index=0)
 print(f"Selected gender: {selected_years_exp}")
 
 med_school = ['All'] + sorted(df['Med_sch'].dropna().unique().tolist())
-selected_school = sidebar.selectbox("Medical School", options=med_school, index=0)
+selected_school = leftbar.selectbox("Medical School", options=med_school, index=0)
 print(f"Selected medical school: {selected_school}")
-
-#-- MAIN CONTENT ---
-col1, col2 = st.columns([1,3])
 
 @st.cache_data
 def filter_data(df, state, specialty, gender, years_exp, med_school):
@@ -83,12 +82,36 @@ def filter_data(df, state, specialty, gender, years_exp, med_school):
 
 filtered_df = filter_data(df, selected_state, selected_specialty, selected_gender, selected_years_exp, selected_school)
 
+
+#-- KPI like Metrics ---
+def metric_card(label, value, color="#23272b", text_color="#fff", icon=None):
+    html = f"""
+    <div style="
+        background-color: {color};
+        padding: 20px 20px 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 7px;
+        margin-top: 10px;
+        min-width: 180px;
+        text-align: center;
+    ">
+        <div style="font-size: 1.1rem; color: #b0b0b0; margin-bottom: 6px;">
+            {icon if icon else ""} {label}
+        </div>
+        <div style="font-size: 2.2rem; font-weight: bold; color: {text_color};">
+            {value}
+        </div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
 with col1:
-    total_providers = col1.metric(label="Number of Providers", value=filtered_df['NPI'].nunique())
-    average_score = col1.metric(label="Average MIPS Score", value=f"{filtered_df['final_MIPS_score'].mean():.1f}")
-    total_specialties = col1.metric(label="Number of Specialties", value=filtered_df['pri_spec'].nunique())
-    gender_breakdown = col1.metric(label="Males: Females", value=calculate_gender_distribution(filtered_df))
-    average_years_experience = col1.metric(label="Average Years Experience", value=f"{filtered_df['years_experience'].mean():0.1f}")
+    metric_card("Number of Providers", filtered_df['NPI'].nunique(), color="#f2f6f7", text_color="#23272b")
+    metric_card("Average MIPS Score", f"{filtered_df['final_MIPS_score'].mean():.1f}", color="#f2f6f7", text_color="#23272b")
+    metric_card("Number of Specialties", filtered_df['pri_spec'].nunique(), color="#f2f6f7", text_color="#23272b")
+    metric_card("Males: Females", calculate_gender_distribution(filtered_df), color="#f2f6f7", text_color="#23272b")
+    metric_card("Average Years Experience", f"{filtered_df['years_experience'].mean():0.1f}", color="#f2f6f7", text_color="#23272b")
 
 def make_mips_histogram(df, x_col, title, bar_color):
     '''This function creates a histogram of the MIPS scores'''
