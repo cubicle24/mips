@@ -140,7 +140,7 @@ def make_mips_histogram(df, x_col, title, bar_color):
     return fig
 
 with col2:
-    plot_df = filtered_df.sample(n=150000) if len(filtered_df) > 150000 else filtered_df
+    plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
     fig1 = make_mips_histogram(plot_df, 'final_MIPS_score', "Distribution of Overall Scores",'#25b5b9')
     st.plotly_chart(fig1, use_container_width=True)
 
