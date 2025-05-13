@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
+import psutil
+
 
 #--- Page Config ---
 st.set_page_config(
@@ -40,7 +42,8 @@ def calculate_gender_distribution(the_df: pd.DataFrame) -> str:
 
 
 st.markdown('<h1 style="text-align: center; margin-bottom: 0.5rem;">Merit-Based Incentive Payment System (MIPS) Dashboard</h1>', unsafe_allow_html=True)
-st.markdown('<div style="text-align: center; font-size:15px; color:lightblue;">Explore trends and patterns in MIPS scores </div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; font-size:15px; color:blue;">Explore trends and patterns in MIPS scores </div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; font-size:15px; color:lightblue;">Note: due to Streamlit cloud memory constraints, graphs are drawn based on a sampled subset of providers</div>', unsafe_allow_html=True)
 st.divider()
 
 
@@ -91,6 +94,13 @@ def filter_data(df, state, specialty, gender, years_exp, med_school,practice_siz
     return filtered
 
 filtered_df = filter_data(df, selected_state, selected_specialty, selected_gender, selected_years_exp, selected_school, selected_size)
+
+#add in memory usage
+
+process = psutil.Process(os.getpid())
+memory_mb = process.memory_info().rss / 1024 / 1024
+
+st.metric(label="This Dashboard's Memory Usage", value=f"{memory_mb:.2f} MB")
 
 
 #-- KPI like Metrics ---
@@ -147,7 +157,7 @@ def make_mips_histogram(df, x_col, title, bar_color):
     return fig
 
 with col2:
-    plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
+    plot_df = filtered_df.sample(n=10000) if len(filtered_df) > 10000 else filtered_df
     fig1 = make_mips_histogram(plot_df, 'final_MIPS_score', "Distribution of Overall Scores",'#25b5b9')
     st.plotly_chart(fig1, use_container_width=True)
     st.markdown("- Key Insight: MIPS by design clusters most providers around similar scores (mean 80), so most providers appear the same)")
@@ -156,7 +166,7 @@ with col2:
     subcol1, subcol2 = st.columns(2)
 
     with subcol1:
-        plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
+        plot_df = filtered_df.sample(n=10000) if len(filtered_df) > 10000 else filtered_df
        
         fig2 = make_mips_histogram(plot_df, 'Quality_category_score', "Distribution of Quality Scores",'#b9c3eb')
         st.plotly_chart(fig2, use_container_width=True)
@@ -166,7 +176,7 @@ with col2:
         st.markdown("- Key Insight: Improvement Activity scores are all similar, but low (40)")
 
     with subcol2:
-        plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
+        plot_df = filtered_df.sample(n=10000) if len(filtered_df) > 10000 else filtered_df
         
         fig4 = make_mips_histogram(plot_df, 'PI_category_score', "Distribution of Promoting Interoperability Scores",'#39c3eb')
         st.plotly_chart(fig4, use_container_width=True)
@@ -174,3 +184,4 @@ with col2:
 
         fig5 = make_mips_histogram(plot_df, 'Cost_category_score', "Distribution of Cost Scores",'#fde23a')
         st.plotly_chart(fig5, use_container_width=True)
+
