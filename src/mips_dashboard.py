@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import os
 
 #--- Page Config ---
 st.set_page_config(
@@ -12,8 +13,11 @@ st.set_page_config(
 # --- 1. Load Data ---
 @st.cache_data
 def load_data():
-    # Adjust path as needed
-    return pd.read_parquet('../data/cleaned/df_master.parquet')
+    # going to use absolute paths from root of the project, so it works when deployed
+    # return pd.read_parquet('../data/cleaned/df_master.parquet')
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    path_to_file = os.path.join(current_directory, '..','data','cleaned','df_master.parquet')
+    return pd.read_parquet(path_to_file)
 
 df = load_data()
 
@@ -41,7 +45,7 @@ st.divider()
 
 
 #-- MAIN CONTENT ---
-leftbar, col1, col2 = st.columns([1,1,3],gap="large")
+leftbar, vertical_divider, col1, col2 = st.columns([1,0.05,1,3],gap="large")
 
 leftbar.subheader("Filter Providers by:")
 
@@ -105,6 +109,14 @@ def metric_card(label, value, color="#23272b", text_color="#fff", icon=None):
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
+
+with vertical_divider:
+    st.markdown(
+        """
+        <div style="height: 100vh; border-left: 2px solid #e0e0e0; margin-left: auto; margin-right: auto;"></div>
+        """,
+        unsafe_allow_html=True
+    )
 
 with col1:
     metric_card("Number of Providers", filtered_df['NPI'].nunique(), color="#f2f6f7", text_color="#23272b")
