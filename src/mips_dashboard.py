@@ -151,8 +151,8 @@ def make_mips_histogram(df, x_col, title, bar_color):
         nbins=110,
         title=title,
         marginal='box',  # Optional: adds a boxplot above
-        height=200,
-        width=300,
+        height=300,
+        width=500,
         color_discrete_sequence=[bar_color]  # Use any hex color or named color
     )
     return fig
