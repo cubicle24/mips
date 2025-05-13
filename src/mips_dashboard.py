@@ -22,6 +22,8 @@ def load_data():
     return pd.read_parquet(path_to_file)
 
 df = load_data()
+df = df.sample(n=20000,random_state=64)
+st.write(f"In-memory size: {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
 
 def calculate_gender_distribution(the_df: pd.DataFrame) -> str:
     '''Takes in the master DF and returns the number of unique M and F providers'''
@@ -156,7 +158,7 @@ def make_mips_histogram(df, x_col, title, bar_color):
     return fig
 
 with col2:
-    plot_df = filtered_df.sample(n=10000) if len(filtered_df) > 10000 else filtered_df
+    plot_df = filtered_df.sample(n=2000) if len(filtered_df) > 2000 else filtered_df
     fig1 = make_mips_histogram(plot_df, 'final_MIPS_score', "Distribution of Overall Scores",'#25b5b9')
     st.plotly_chart(fig1, use_container_width=True)
     st.markdown("- Key Insight: MIPS by design clusters most providers around similar scores (mean 80), so most providers appear the same)")
@@ -165,7 +167,7 @@ with col2:
     subcol1, subcol2 = st.columns(2)
 
     with subcol1:
-        plot_df = filtered_df.sample(n=10000) if len(filtered_df) > 10000 else filtered_df
+        plot_df = filtered_df.sample(n=2000) if len(filtered_df) > 2000 else filtered_df
        
         fig2 = make_mips_histogram(plot_df, 'Quality_category_score', "Distribution of Quality Scores",'#b9c3eb')
         st.plotly_chart(fig2, use_container_width=True)
@@ -175,7 +177,7 @@ with col2:
         st.markdown("- Key Insight: Improvement Activity scores are all similar, but low (40)")
 
     with subcol2:
-        plot_df = filtered_df.sample(n=10000) if len(filtered_df) > 10000 else filtered_df
+        plot_df = filtered_df.sample(n=2000) if len(filtered_df) > 2000 else filtered_df
         
         fig4 = make_mips_histogram(plot_df, 'PI_category_score', "Distribution of Promoting Interoperability Scores",'#39c3eb')
         st.plotly_chart(fig4, use_container_width=True)
