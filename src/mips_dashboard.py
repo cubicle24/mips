@@ -83,16 +83,6 @@ def filter_data(df, state, specialty, gender, years_exp, med_school):
 
 filtered_df = filter_data(df, selected_state, selected_specialty, selected_gender, selected_years_exp, selected_school)
 
-# filtered_df = df
-# if selected_state != 'All':
-#     filtered_df = filtered_df[filtered_df['st'] == selected_state]
-# if selected_specialty != 'All':
-#     filtered_df = filtered_df[filtered_df['pri_spec'] == selected_specialty]
-# if selected_gender != 'All':
-#     filtered_df = filtered_df[filtered_df['gndr'].str.strip() == selected_gender]
-# if selected_years_exp != 'All':
-#     filtered_df = filtered_df[filtered_df['years_experience'] == selected_years_exp]
-
 with col1:
     total_providers = col1.metric(label="Number of Providers", value=filtered_df['NPI'].nunique())
     average_score = col1.metric(label="Average MIPS Score", value=f"{filtered_df['final_MIPS_score'].mean():.1f}")
@@ -100,17 +90,23 @@ with col1:
     gender_breakdown = col1.metric(label="Males: Females", value=calculate_gender_distribution(filtered_df))
     average_years_experience = col1.metric(label="Average Years Experience", value=f"{filtered_df['years_experience'].mean():0.1f}")
 
-with col2:
-    plot_df = filtered_df.sample(n=150000) if len(filtered_df) > 150000 else filtered_df
-    fig1 = px.histogram(
-        plot_df,
-        x='final_MIPS_score',
+def make_mips_histogram(df, x_col, title, bar_color):
+    '''This function creates a histogram of the MIPS scores'''
+    fig = px.histogram(
+        df,
+        x=x_col,
         nbins=110,
-        title="Distribution of Overall Scores",
+        title=title,
         marginal='box',  # Optional: adds a boxplot above
         height=400,
-        width=600
+        width=600,
+        color_discrete_sequence=[bar_color]  # Use any hex color or named color
     )
+    return fig
+
+with col2:
+    plot_df = filtered_df.sample(n=150000) if len(filtered_df) > 150000 else filtered_df
+    fig1 = make_mips_histogram(plot_df, 'final_MIPS_score', "Distribution of Overall Scores",'#25b5b9')
     st.plotly_chart(fig1, use_container_width=True)
 
     #these show the breakdown in MIPS scores by Quality, PI, IA, and Cost
@@ -118,54 +114,18 @@ with col2:
 
     with subcol1:
         plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
-        fig2 = px.histogram(
-            plot_df,
-            x='Quality_category_score',
-            nbins=110,
-            title="Distribution of Quality Scores",
-            marginal='box',  # Optional: adds a boxplot above
-            height=400,
-            width=600,
-            color_discrete_sequence=['#345abd']  # Use any hex color or named color
-        )
+       
+        fig2 = make_mips_histogram(plot_df, 'Quality_category_score', "Distribution of Quality Scores",'#b9c3eb')
         st.plotly_chart(fig2, use_container_width=True)
 
-        fig3 = px.histogram(
-            plot_df,
-            x='IA_category_score',
-            nbins=110,
-            title="Distribution of Improvement Activities Scores",
-            marginal='box',  # Optional: adds a boxplot above
-            height=400,
-            width=600,
-            color_discrete_sequence=['#def4bd']  # Use any hex color or named color
-        )
+        fig3 = make_mips_histogram(plot_df, 'IA_category_score', "Distribution of Improvement Activities Scores",'#f83a3e')
         st.plotly_chart(fig3, use_container_width=True)
-
-
 
     with subcol2:
         plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
-        fig4 = px.histogram(
-            plot_df,
-            x='PI_category_score',
-            nbins=110,
-            title="Distribution of Promoting Interoperability Scores",
-            marginal='box',  # Optional: adds a boxplot above
-            height=400,
-            width=600,
-            color_discrete_sequence=['#39c3eb']  # Use any hex color or named color
-        )
+        
+        fig4 = make_mips_histogram(plot_df, 'PI_category_score', "Distribution of Promoting Interoperability Scores",'#39c3eb')
         st.plotly_chart(fig4, use_container_width=True)
 
-        fig5 = px.histogram(
-            plot_df,
-            x='Cost_category_score',
-            nbins=110,
-            title="Distribution of Cost Scores",
-            marginal='box',  # Optional: adds a boxplot above
-            height=400,
-            width=600,
-            color_discrete_sequence=['#e33a3e']  # Use any hex color or named color
-        )
+        fig5 = make_mips_histogram(plot_df, 'Cost_category_score', "Distribution of Cost Scores",'#fde23a')
         st.plotly_chart(fig5, use_container_width=True)
