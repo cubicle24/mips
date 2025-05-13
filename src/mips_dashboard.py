@@ -69,8 +69,12 @@ med_school = ['All'] + sorted(df['Med_sch'].dropna().unique().tolist())
 selected_school = leftbar.selectbox("Medical School", options=med_school, index=0)
 print(f"Selected medical school: {selected_school}")
 
+size = ['All'] + sorted(df['num_org_mem'].dropna().unique().tolist())
+selected_size = leftbar.selectbox("Practice Size", options=size, index=0)
+print(f"Selected size: {selected_size}")
+
 @st.cache_data
-def filter_data(df, state, specialty, gender, years_exp, med_school):
+def filter_data(df, state, specialty, gender, years_exp, med_school,practice_size):
     filtered = df
     if state != 'All':
         filtered = filtered[filtered['st'] == state]
@@ -82,9 +86,11 @@ def filter_data(df, state, specialty, gender, years_exp, med_school):
         filtered = filtered[filtered['years_experience'] == years_exp]
     if med_school != 'All':
         filtered = filtered[filtered['Med_sch'] == med_school]
+    if practice_size != 'All':
+        filtered = filtered[filtered['num_org_mem'] == practice_size]
     return filtered
 
-filtered_df = filter_data(df, selected_state, selected_specialty, selected_gender, selected_years_exp, selected_school)
+filtered_df = filter_data(df, selected_state, selected_specialty, selected_gender, selected_years_exp, selected_school, selected_size)
 
 
 #-- KPI like Metrics ---
@@ -124,6 +130,7 @@ with col1:
     metric_card("Number of Specialties", filtered_df['pri_spec'].nunique(), color="#f2f6f7", text_color="#23272b")
     metric_card("Males: Females", calculate_gender_distribution(filtered_df), color="#f2f6f7", text_color="#23272b")
     metric_card("Average Years Experience", f"{filtered_df['years_experience'].mean():0.1f}", color="#f2f6f7", text_color="#23272b")
+    metric_card("Average Practice Size", f"{filtered_df['num_org_mem'].mean():0.1f}", color="#f2f6f7", text_color="#23272b")
 
 def make_mips_histogram(df, x_col, title, bar_color):
     '''This function creates a histogram of the MIPS scores'''
@@ -140,9 +147,10 @@ def make_mips_histogram(df, x_col, title, bar_color):
     return fig
 
 with col2:
-    plot_df = filtered_df.sample(n=150000) if len(filtered_df) > 150000 else filtered_df
+    plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
     fig1 = make_mips_histogram(plot_df, 'final_MIPS_score', "Distribution of Overall Scores",'#25b5b9')
     st.plotly_chart(fig1, use_container_width=True)
+    st.markdown("- Key Insight: MIPS by design clusters most providers around similar scores (mean 80), so most providers appear the same)")
 
     #these show the breakdown in MIPS scores by Quality, PI, IA, and Cost
     subcol1, subcol2 = st.columns(2)
@@ -155,12 +163,14 @@ with col2:
 
         fig3 = make_mips_histogram(plot_df, 'IA_category_score', "Distribution of Improvement Activities Scores",'#f83a3e')
         st.plotly_chart(fig3, use_container_width=True)
+        st.markdown("- Key Insight: Improvement Activity scores are all similar, but low (40)")
 
     with subcol2:
         plot_df = filtered_df.sample(n=50000) if len(filtered_df) > 50000 else filtered_df
         
         fig4 = make_mips_histogram(plot_df, 'PI_category_score', "Distribution of Promoting Interoperability Scores",'#39c3eb')
         st.plotly_chart(fig4, use_container_width=True)
+        st.markdown("- Key Insight: Almost everyone scored very high (receiving credit often involves just checking boxes)")
 
         fig5 = make_mips_histogram(plot_df, 'Cost_category_score', "Distribution of Cost Scores",'#fde23a')
         st.plotly_chart(fig5, use_container_width=True)
