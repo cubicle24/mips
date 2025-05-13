@@ -2,21 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# st.markdown("""
-#     <style>
-#     div[data-testid="stTabs"] button[role="tab"] p {
-#         font-size: 1.8rem !important;
-#         padding: 2.5rem 2.1rem !important;
-#         min-width: 160px;
-#         font-weight: 700 !important;
-#         letter-spacing: normal !important;
-#     }
-#     div[data-testid="stTabs"] div[role="tablist"] {
-#         gap: 1rem !important;
-#     }
-#     </style>
-# """, unsafe_allow_html=True)
-
 # --- 1. Load Data ---
 @st.cache_data
 def load_data():
@@ -26,76 +11,62 @@ def load_data():
 df = load_data()
 
 
+#--- Page Config ---
+st.set_page_config(
+    page_title="MIPS Dashboard",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+
+def calculate_gender_distribution(df: pd.DataFrame) -> str:
+    '''Takes in the master DF and returns the number of unique M and F providers'''
+    genders = df[['NPI','gndr']]
+    #drop duplicate NPIs
+    genders = genders.drop_duplicates(subset=['NPI'])
+    gender_counts = genders.groupby('gndr')['NPI'].count().reset_index()
+    # gender_counts.columns = ['Gender', 'Count']
+    females = gender_counts.iloc[0, 1] / gender_counts['NPI'].sum() * 100
+    males = gender_counts.iloc[1, 1] / gender_counts['NPI'].sum() * 100
+    return (f"{males:.1f}% : {females:.1f}%")
+
+
 st.header("Merit-Based Incentive Payment System (MIPS) Dashboard")
 st.markdown("Explore trends and patterns in provider MIPS scores")
+st.divider()
 
-# Make some tabs
+#-- SIDEBAR ---
+sidebar = st.sidebar
+sidebar.title("Filter Providers by:")
+states = ['All'] + sorted(df['st'].dropna().unique().tolist())
 
-tab1, tab2, tab3 = st.tabs(['Overall MIPS Scores','Quality MIPS','Comparisons'])
+selected_state = sidebar.selectbox("State", options=states, index=0)
+print(f"Selected state: {selected_state}")
 
-with tab1:
+#-- MAIN CONTENT ---
+col1, col2 = st.columns([1,3])
 
-    col1, col2 = st.columns(2, gap='large')
-    with col1:
-        st.markdown(
-            f"""
-            <div style="background:#f5f7fa; border-radius:18px; padding:32px 36px; margin-bottom:28px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <div style="font-size:2.5rem; color:#888;">Unique Providers</div>
-                <div style="font-size:4.6rem; font-weight:700; color:#222;">{df['NPI'].nunique():,}</div>
-            </div>
-            """, unsafe_allow_html=True
-        )
-        st.markdown(
-            f"""
-            <div style="background:#f5f7fa; border-radius:18px; padding:32px 36px; margin-bottom:28px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <div style="font-size:2.5rem; color:#888;">Unique Providers</div>
-                <div style="font-size:4.6rem; font-weight:700; color:#222;">{df['NPI'].nunique():,}</div>
-            </div>
-            """, unsafe_allow_html=True
-        )
-        st.markdown(
-            f"""
-            <div style="background:#f5f7fa; border-radius:18px; padding:32px 36px; margin-bottom:28px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <div style="font-size:2.5rem; color:#888;">Unique Providers</div>
-                <div style="font-size:4.6rem; font-weight:700; color:#222;">{df['NPI'].nunique():,}</div>
-            </div>
-            """, unsafe_allow_html=True
-        )
+if selected_state == 'All':
+    filtered_df = df.copy()
+else:
+    filtered_df = df[df['st'] == selected_state].copy()
 
-    with col2:
-        st.markdown(
-            f"""
-            <div style="background:#f5f7fa; border-radius:18px; padding:32px 36px; margin-bottom:28px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <div style="font-size:2.5rem; color:#888;">Unique Providers</div>
-                <div style="font-size:4.6rem; font-weight:700; color:#222;">{df['NPI'].nunique():,}</div>
-            </div>
-            """, unsafe_allow_html=True
-        )
-        st.markdown(
-            f"""
-            <div style="background:#f5f7fa; border-radius:18px; padding:32px 36px; margin-bottom:28px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <div style="font-size:2.5rem; color:#888;">Unique Providers</div>
-                <div style="font-size:4.6rem; font-weight:700; color:#222;">{df['NPI'].nunique():,}</div>
-            </div>
-            """, unsafe_allow_html=True
-        )
-        st.markdown(
-            f"""
-            <div style="background:#f5f7fa; border-radius:18px; padding:32px 36px; margin-bottom:28px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <div style="font-size:2.5rem; color:#888;">Unique Providers</div>
-                <div style="font-size:4.6rem; font-weight:700; color:#222;">{df['NPI'].nunique():,}</div>
-            </div>
-            """, unsafe_allow_html=True
-        )
+with col1:
 
-    tab1.sidebar.title("Filters")
+    total_providers = col1.metric(label="Number of Providers", value=filtered_df['NPI'].nunique())
+    average_score = col1.metric(label="Average MIPS Score", value=f"{filtered_df['final_MIPS_score'].mean():.1f}")
+    total_specialties = col1.metric(label="Number of Specialties", value=filtered_df['pri_spec'].nunique())
+    gender_breakdown = col1.metric(label="Males: Females", value=calculate_gender_distribution(filtered_df))
 
-
-with tab2:
-    st.title("Graphs")
-    st.write("Visualize the MIPS data")
-
-with tab3:
-    st.title("Comparisons")
-    st.write("Compare different providers")
-
+with col2:
+    fig = px.histogram(
+        filtered_df,
+        x='final_MIPS_score',
+        nbins=110,
+        title="Distribution of MIPS Scores",
+        marginal='box',  # Optional: adds a boxplot above
+        height=1000,
+        width=700
+    )
+    st.plotly_chart(fig, use_container_width=True)
