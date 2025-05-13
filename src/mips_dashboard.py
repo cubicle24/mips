@@ -45,7 +45,7 @@ def calculate_gender_distribution(the_df: pd.DataFrame) -> str:
 
 st.markdown('<h1 style="text-align: center; margin-bottom: 0.5rem;">Merit-Based Incentive Payment System (MIPS) Dashboard</h1>', unsafe_allow_html=True)
 st.markdown('<div style="text-align: center; font-size:15px; color:blue;">Explore trends and patterns in MIPS scores </div>', unsafe_allow_html=True)
-st.markdown('<div style="text-align: center; font-size:15px; color:lightblue;">Note: due to Streamlit cloud memory constraints, graphs are drawn based on a sampled subset of providers</div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; font-size:15px; color:lightblue;">Note: data is subsampled due to Streamlit cloud memory constraints. Full dataset is 25x larger.</div>', unsafe_allow_html=True)
 st.divider()
 
 
